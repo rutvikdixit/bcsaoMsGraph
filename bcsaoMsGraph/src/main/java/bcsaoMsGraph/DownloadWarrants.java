@@ -64,7 +64,10 @@ public class DownloadWarrants {
 			}
 			*/
 			
-			MessageCollectionPage searchMailBox;
+			MessageCollectionPage searchMailBox = Graph.listMailFromDistributionList("saowarrants@stattorney.org");
+			for (Message m: searchMailBox.getCurrentPage()) {
+				logger.info("Sender: \t" + m.sender.emailAddress.address + "\t Subject: \t" + m.subject);
+			}
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
