@@ -208,7 +208,7 @@ public class Graph {
     	File finalFile = new File(downloadDirectory.getPath() + "\\" + fileName);
     	
     	Files.copy(is, downloadFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-    	Files.move(downloadFile.toPath(), finalFile.toPath(), StandardCopyOption.ATOMIC_MOVE);
+    	Files.move(downloadFile.toPath(), finalFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     	
     	return null;
     }

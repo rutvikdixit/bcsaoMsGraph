@@ -2,14 +2,20 @@ package bcsaoMsGraph;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.util.ArrayList;
 import java.util.Properties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.microsoft.graph.models.Attachment;
+import com.microsoft.graph.models.MailFolder;
 import com.microsoft.graph.models.Message;
 import com.microsoft.graph.requests.AttachmentCollectionPage;
+import com.microsoft.graph.requests.MailFolderCollectionPage;
 import com.microsoft.graph.requests.MessageCollectionPage;
 
 
@@ -22,6 +28,42 @@ public class DownloadWarrants {
 			e.printStackTrace();
 		}
 	}
+	
+	private static String getInsertQuery (ArrayList<ArrayList<String>> insertedRows) {
+		Logger logger = LoggerFactory.getLogger("EmailsLogger");
+		
+		String begin = "insert into _bcsao_WarrantControl (WarrantControlNumber, ASA_Email, SequenceNumber, Yes_No) values ";
+		ArrayList<String> tempRow;
+		String temp = "";
+		
+		for(int i = 0; i < insertedRows.size(); i++) {
+			tempRow = insertedRows.get(i);
+			temp = "";
+			
+			if(i > 0)
+				temp += ", ";
+			
+			temp += "(";
+			temp += "'" + tempRow.get(0) + "',";
+			temp += "'" + tempRow.get(1) + "',";
+			temp += "'" + tempRow.get(2) + "',";
+			if(tempRow.get(3) == "Y") {
+				temp += "1";
+			} else {
+				temp += "0";
+			}
+			
+			temp += ")";
+			
+			begin += temp;
+			
+		}
+		
+		logger.info(begin);
+		
+		return begin;
+	}
+	
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
@@ -37,8 +79,9 @@ public class DownloadWarrants {
 		initializeGraph(oAuth);
 		logger.info(oAuth.toString());
 		
-		String fileName = "";
-		File downloadDirectory = new File("Download");
+		
+		//String fileName = "";
+		File downloadDirectory = new File("C:\\DownloadedWarrants");
 		if(!downloadDirectory.exists())
 			downloadDirectory.mkdir();
 		
@@ -64,10 +107,99 @@ public class DownloadWarrants {
 			}
 			*/
 			
-			MessageCollectionPage searchMailBox = Graph.listMailFromDistributionList("saowarrants@stattorney.org");
-			for (Message m: searchMailBox.getCurrentPage()) {
-				logger.info("Sender: \t" + m.sender.emailAddress.address + "\t Subject: \t" + m.subject);
+			String mailboxAddress = "saowarrants@stattorney.org";
+			String ASAEmail = "", warrantControlNumber = "", sequenceNumber = "";
+			String yesNo = "";
+			String[] subjectTokens, attachmentTokens;
+			String mailboxFolderId = null;
+			
+			int len;
+			
+			ArrayList<String> sqlRow;
+			ArrayList<ArrayList<String>> insertedRows = new ArrayList<>();;
+			
+			MailFolderCollectionPage folders =  Graph.getFolders(mailboxAddress);
+			for(MailFolder f: folders.getCurrentPage()) {
+				//logger.info(f.displayName + "\t" + f.id);
+				if(f.displayName.equals("Processed Warrants")) {
+					mailboxFolderId = f.id;
+					logger.info("MailFolder Info: " + f.displayName + "\t" + mailboxFolderId);
+				}
+				
 			}
+						
+			
+			MessageCollectionPage searchMailBox = Graph.listMailFromDistributionList(mailboxAddress);
+			
+			if(searchMailBox.getCurrentPage().size() == 0) {
+				logger.info("No new emails! Ending execution...");
+				return;
+			}
+			
+			for (Message m: searchMailBox.getCurrentPage()) {
+				
+				sqlRow = new ArrayList<>();
+
+				ASAEmail = "";
+				warrantControlNumber = "";
+				sequenceNumber = "";
+				yesNo = "";
+				
+				subjectTokens = m.subject.split(" ");
+				for(int i = 0 ; i < subjectTokens.length; i++) {
+					//logger.info(subjectTokens[i]);
+				}
+				warrantControlNumber = subjectTokens[0];
+				sequenceNumber = subjectTokens[1];
+				ASAEmail = m.sender.emailAddress.address;
+				
+				if(subjectTokens[2].toLowerCase() == "yes") {
+					yesNo = "Y";
+				} else {
+					yesNo = "N";
+				}
+				
+				AttachmentCollectionPage attachments = Graph.getMailAttachments(mailboxAddress, m.id);
+				for(Attachment a: attachments.getCurrentPage()) {
+					attachmentTokens = a.name.split("\\.");
+					
+					len = attachmentTokens.length;
+					
+					if(attachmentTokens[len-1].equals("png")) {
+						logger.info("Attachment is an image. Ignoring ...");
+						continue;
+					}
+					logger.info("Downloading email attachment: " + a.name);
+					Graph.downloadAttachment_test2(mailboxAddress, m.id, a, downloadDirectory, a.name);
+					
+					sqlRow.add(warrantControlNumber);
+					sqlRow.add(ASAEmail);
+					sqlRow.add(sequenceNumber);
+					sqlRow.add(yesNo);
+					
+					insertedRows.add(sqlRow);
+				}
+				
+				
+				Graph.moveEmail(mailboxAddress, m.id, mailboxFolderId);
+				
+			}
+//			System.out.println(insertedRows);
+			
+			String insertQuery = getInsertQuery(insertedRows);
+			
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
+			String connectionURL = "jdbc:sqlserver://SAOJD1;"
+					+ "databaseName=PD51_Data;"
+					+ "integratedSecurity=true";
+			Connection conn = DriverManager.getConnection(connectionURL);
+			PreparedStatement ps;
+			
+			ps = conn.prepareStatement(insertQuery);
+			ps.execute();
+			logger.info("updated _bcsao_WarrantControl table with " + insertedRows.size() + " rows.");
+			
+			
 			
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
