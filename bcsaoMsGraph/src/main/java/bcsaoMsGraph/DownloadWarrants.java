@@ -47,7 +47,7 @@ public class DownloadWarrants {
 			temp += "'" + tempRow.get(0) + "',";
 			temp += "'" + tempRow.get(1) + "',";
 			temp += "'" + tempRow.get(2) + "',";
-			if(tempRow.get(3) == "Y") {
+			if(tempRow.get(3).equals("Y")) {
 				temp += "1";
 			} else {
 				temp += "0";
@@ -153,7 +153,7 @@ public class DownloadWarrants {
 				sequenceNumber = subjectTokens[1];
 				ASAEmail = m.sender.emailAddress.address;
 				
-				if(subjectTokens[2].toLowerCase() == "yes") {
+				if(subjectTokens[2].toLowerCase().equals("yes")) {
 					yesNo = "Y";
 				} else {
 					yesNo = "N";
