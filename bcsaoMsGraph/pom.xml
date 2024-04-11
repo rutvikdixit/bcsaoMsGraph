@@ -68,7 +68,7 @@
                     <archive>
                         <manifest>
                             <!-- Specify the main class for the JAR file -->
-                            <mainClass>bcsaoMsGraph.DownloadWarrants</mainClass>
+                            <mainClass>bcsaoMsGraph.DownloadWarrants2</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

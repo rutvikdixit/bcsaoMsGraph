@@ -92,6 +92,26 @@ public class Graph {
     	
     	return page2;
     }
+    
+    public static MessageCollectionPage listMailFromDistributionList(String emailAddress, String folderID) throws Exception {
+    	if (_clientSecretCredential == null) {
+            throw new Exception("Graph has not been initialized for app-only auth");
+        } 
+    	
+    	if(emailAddress == null || emailAddress == "") {
+    		throw new Exception("Email Address cannot be null or empty string.");
+    	}
+    	
+
+    	MessageCollectionPage page2 = _appClient.users(emailAddress)
+    			.mailFolders(folderID)
+    			.messages()
+    			.buildRequest()
+    			.top(10)
+    			.get();
+    	
+    	return page2;
+    }
         
     
     public static MessageCollectionPage listMail(String emailAddress) throws Exception {

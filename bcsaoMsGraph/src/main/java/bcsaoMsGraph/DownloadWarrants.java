@@ -81,9 +81,11 @@ public class DownloadWarrants {
 		
 		
 		//String fileName = "";
+		// Creating the download directory - if not existing.
 		File downloadDirectory = new File("C:\\DownloadedWarrants");
 		if(!downloadDirectory.exists())
 			downloadDirectory.mkdir();
+		
 		
 		try {
 			
@@ -118,6 +120,7 @@ public class DownloadWarrants {
 			ArrayList<String> sqlRow;
 			ArrayList<ArrayList<String>> insertedRows = new ArrayList<>();;
 			
+			//Getting the Outlook MailFolderId for the ProcessedWarrants mail folder.
 			MailFolderCollectionPage folders =  Graph.getFolders(mailboxAddress);
 			for(MailFolder f: folders.getCurrentPage()) {
 				//logger.info(f.displayName + "\t" + f.id);
@@ -131,6 +134,7 @@ public class DownloadWarrants {
 			
 			MessageCollectionPage searchMailBox = Graph.listMailFromDistributionList(mailboxAddress);
 			
+			//IF Inbox folder has no new mails, then stops execution.
 			if(searchMailBox.getCurrentPage().size() == 0) {
 				logger.info("No new emails! Ending execution...");
 				return;
@@ -138,6 +142,7 @@ public class DownloadWarrants {
 			
 			for (Message m: searchMailBox.getCurrentPage()) {
 				
+				//Resetting the sqlRow for each email.
 				sqlRow = new ArrayList<>();
 
 				ASAEmail = "";
@@ -146,9 +151,9 @@ public class DownloadWarrants {
 				yesNo = "";
 				
 				subjectTokens = m.subject.split(" ");
-				for(int i = 0 ; i < subjectTokens.length; i++) {
+				//for(int i = 0 ; i < subjectTokens.length; i++) {
 					//logger.info(subjectTokens[i]);
-				}
+				//}
 				warrantControlNumber = subjectTokens[0];
 				sequenceNumber = subjectTokens[1];
 				ASAEmail = m.sender.emailAddress.address;
@@ -161,10 +166,12 @@ public class DownloadWarrants {
 				
 				AttachmentCollectionPage attachments = Graph.getMailAttachments(mailboxAddress, m.id);
 				for(Attachment a: attachments.getCurrentPage()) {
+					
 					attachmentTokens = a.name.split("\\.");
 					
 					len = attachmentTokens.length;
 					
+					//Checking the attachment file extension to filter out the email signature images.
 					if(attachmentTokens[len-1].equals("png")) {
 						logger.info("Attachment is an image. Ignoring ...");
 						continue;
@@ -177,6 +184,7 @@ public class DownloadWarrants {
 					sqlRow.add(sequenceNumber);
 					sqlRow.add(yesNo);
 					
+					//The DB is updated only if the email has a valid non-image attachment.
 					insertedRows.add(sqlRow);
 				}
 				
