@@ -88,7 +88,7 @@ public class Graph {
     	}
     	
 
-    	MessageCollectionPage page2 = _appClient.users(emailAddress).mailFolders("inbox").messages().buildRequest().top(10).get();
+    	MessageCollectionPage page2 = _appClient.users(emailAddress).mailFolders("inbox").messages().buildRequest().top(50).get();
     	
     	return page2;
     }
