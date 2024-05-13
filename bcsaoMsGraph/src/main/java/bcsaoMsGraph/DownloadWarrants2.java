@@ -187,7 +187,8 @@ public class DownloadWarrants2 {
 				yesNo = "N";
 			}
 			
-			if(warrantControlNumber.toLowerCase().equals("NoWarrant")) {
+			if(warrantControlNumber.toLowerCase().equals("nowarrant")) {
+				logger.info("No Warrant email detected!");
 				noWarrantFlag = true;
 			}
 			
