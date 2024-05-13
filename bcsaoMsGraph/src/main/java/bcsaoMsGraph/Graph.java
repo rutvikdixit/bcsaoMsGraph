@@ -93,6 +93,7 @@ public class Graph {
     	return page2;
     }
     
+    
     public static MessageCollectionPage listMailFromDistributionList(String emailAddress, String folderID) throws Exception {
     	if (_clientSecretCredential == null) {
             throw new Exception("Graph has not been initialized for app-only auth");
@@ -176,7 +177,7 @@ public class Graph {
     			.buildRequest()
     			.filter("receivedDateTime ge 2022-01-01T00:00:00Z and sender/emailAddress/address eq '" + senderEmail + "'")
     			.orderBy("receivedDateTime DESC")
-    			.top(20)
+    			.top(100)
     			.get();
     	
     	return searchResult;
@@ -211,7 +212,7 @@ public class Graph {
     			.attachments(attachment.id)
     			.getRequestUrl();
     	
-    	logger.info(req);
+    	//logger.info(req);
     	
     	String fileName;
     	if(optionalFileName == null || optionalFileName == "") {

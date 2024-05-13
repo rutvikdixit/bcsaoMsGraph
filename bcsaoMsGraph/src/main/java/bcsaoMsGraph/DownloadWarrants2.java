@@ -101,7 +101,7 @@ public class DownloadWarrants2 {
 		String mailboxFolderId = null;
 		
 		int len, validAttachments;
-		boolean fwd;
+		boolean fwd, noWarrantFlag;
 		
 		FileAttachment fileAttachment;
 		
@@ -155,6 +155,7 @@ public class DownloadWarrants2 {
 			sequenceNumber = "";
 			yesNo = "";
 			fwd = false;
+			noWarrantFlag = false;
 			
 			mailSubject = m.subject;
 			
@@ -184,6 +185,10 @@ public class DownloadWarrants2 {
 				yesNo = "Y";
 			} else {
 				yesNo = "N";
+			}
+			
+			if(warrantControlNumber.toLowerCase().equals("NoWarrant")) {
+				noWarrantFlag = true;
 			}
 			
 			//logger.info(warrantControlNumber + "\t" + sequenceNumber + "\t" + ASAEmail + "\t" + yesNo);
@@ -225,7 +230,7 @@ public class DownloadWarrants2 {
 				
 				logger.info("Downloading email attachment: " + attachment.name);
 				try {
-					Graph.downloadAttachment_test2(mailboxAddress, m.id, attachment, downloadDirectory, attachment.name);
+					Graph.downloadAttachment_test2(mailboxAddress, m.id, attachment, downloadDirectory, warrantControlNumber + " - " + attachment.name);
 				} catch (Exception e) {
 					logger.error("Error downloading attachment. Moving to next attachment...");
 					e.printStackTrace();
@@ -236,7 +241,7 @@ public class DownloadWarrants2 {
 				
 			}
 			
-			if(validAttachments >= 1) {
+			if((validAttachments >= 1) || (noWarrantFlag == true && validAttachments == 0)) {
 				sqlRow.add(warrantControlNumber);
 				sqlRow.add(ASAEmail);
 				sqlRow.add(sequenceNumber);
