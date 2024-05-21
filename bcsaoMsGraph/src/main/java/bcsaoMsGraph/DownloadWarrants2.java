@@ -171,7 +171,7 @@ public class DownloadWarrants2 {
 				logger.info("Edited effective email subject: \t" + mailSubject);
 			}
 			
-			subjectTokens = mailSubject.split("[\\s ]+");
+			subjectTokens = mailSubject.split("[\\s_]+");
 			/* 
 			for(String temp: subjectTokens) {
 				//System.out.println(temp);
