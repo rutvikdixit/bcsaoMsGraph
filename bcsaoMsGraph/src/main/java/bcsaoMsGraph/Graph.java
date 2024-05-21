@@ -5,9 +5,12 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -226,7 +229,26 @@ public class Graph {
     	InputStream is = farb.content().buildRequest().get();
     	
     	File downloadFile = new File(fileName);
-    	File finalFile = new File(downloadDirectory.getPath() + "\\" + fileName);
+    	// The below segment ensures that files aren't overwritten, and appends a count to the filename. EXAMPLE: If a file exists with name: log.txt, the new file downloaded will be "log_1.txt"
+    	String baseFileName, newFileName, fileExtension;
+    	int count = 1;
+    	ArrayList<String> directoryFiles = new ArrayList<>(Arrays.asList(downloadDirectory.list()));
+    	
+    	baseFileName = FilenameUtils.getBaseName(fileName);
+    	fileExtension = FilenameUtils.getExtension(fileName);
+    	newFileName = baseFileName;
+    	while(true) {
+    		if(directoryFiles.contains(newFileName + "." + fileExtension)) {
+    			logger.info("Download Directory already contains file with name: " + fileName);
+    			newFileName = baseFileName + "_" + Integer.toString(count);
+    			count++;
+    		} else {
+    			newFileName += "." + fileExtension;
+    			break;
+    		}
+    	}
+    	// End of segment
+    	File finalFile = new File(downloadDirectory.getPath() + "\\" + newFileName);
     	
     	Files.copy(is, downloadFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
     	Files.move(downloadFile.toPath(), finalFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
